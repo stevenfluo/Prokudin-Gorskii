@@ -18,7 +18,7 @@
 # You can create any custom variable you would like, and they will be accessible
 # in the templates via {{ site.myvariable }}.
 
-title: "Images of the Russian Empire: Colorizing the Prokudin-Gorskii Photo Collection"
+title: "Colorizing the Prokudin-Gorskii Photo Collection"
 email: sfluo@berkeley.edu
 description: CS 180 Project 1, Steven Luo
 baseurl: "/Prokudin-Gorskii" # the subpath of your site, e.g. /blog
