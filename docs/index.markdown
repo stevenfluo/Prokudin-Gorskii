@@ -8,12 +8,37 @@ permalink: /
 ---
 
 # Overview
+[Sergei Mikhailovich Prokudin-Gorskii](https://en.wikipedia.org/wiki/Sergey_Prokudin-Gorsky) was a Russian chemist and photographer known for his pioneering work in color photography and his efforts to document early 20th-century Russia. He recorded three exposures of each scene onto a glass plate using a red, green, and blue filter, and envisioned special projectors would be able to combine the exposure and display a color image. Though he left Russia in 1918, these glass plate were purchased by the Library of Congress and [recently digitized](https://www.loc.gov/collections/prokudin-gorskii/about-this-collection/). 
 
+Our goal is to turn a stitched negative into a color image. A stitched negative consists of the three color exposures stacked in one image file.
+
+<p align="center">
+    <img src="./tobolsk.jpg" alt="tobolsk" width="200"/>
+    <img src="./monastery.jpg" alt="monastery" width="200"/>
+    <img src="./cathedral.jpg" alt="cathedral" width="200"/>
+    <p style="text-align: center;"><i>Examples of digitized glass plates: tobolsk, monastery, and cathedral.</i></p>
+</p>
+
+We want to use image processing techniques to align these plates to produce a color image with minimal artifacts.
 
 # Approach
+We start by cropping the image into thirds to get the red, green, and blue plate, and stack them on top of each other to get a color image. A quick experiment shows that this image has many visual artifacts that distort the subject of the image.
 
+<p align="center">
+    <img src="./naive_stack_cathedral.jpg" alt="cathedral" width="400"/>
+    <p style="text-align: center;"><i>Three plates stacked without alignment.</i></p>
+</p>
 
-I considered preprocessing images by cropping to the center 90% of each image (removing 5% of image size from each side), but instead used the center 90% as the image to score in order to prevent the edges from skewing the score computation while preserving the full image to allow for smarter cropping in the future.
+I implemented an alignment function that finds the best displacement on each axis, then stacks the shifted plates. By finding the displacement that results in the best alignment when aligning the green to the blue then the red to the blue plate, we can stack the displaced green, displaced red, and blue plates together to get an improved color image. To evaluate the quality of an alignment, I use a scoring method that calculates the Euclidean distance between two images for every possible pair of (x,y) displacements within a specified search range; the returned, best-scoring image from my `align` function is the result of an x and y displacement from the search range that minimizes the Euclidean distance. I also implemented normalized cross-correlation as a scoring method, but it resulted in worse alignment and worse runtime.
+
+To prevent the borders of the image from skewing the score computation, I only scored images based on the center 90% (removing 5% of image size from each side), slightly improving alignments. I considered preprocessing images by directly cropping the initial plates, but I decided not to in order to preserve the full image to allow for smarter cropping in the future.
+
+In order to find the best alignment, I began with an exhaustive search of every possible pair of x and y displacements from a fixed range, for example [-20, 20]. Not only is exhaustive search slow (there are (range width)<sup>2</sup> combinations — in this case, 41<sup>2</sup> combinations to check), it also risks missing the optimal displacement pair if it falls outside of the search range, especially likely on a higher resolution image. 
+
+In order to speed up the alignment process, I implemented an image pyramid that recursively searches a small range of pixel shifts starting from a low resolution to the highest resolution. The smaller search range and the improved search method was vital in order to align the larger, higher-resolution `.tif` images, reducing the per-image runtime from tens of minutes to tens of seconds. This also improves the search heuristic: by centering the search range around the optimal displacement pair for a lower- (half) resolution image, we can shrink the search range significantly while still finding or ending up near the true optimal displacement pair, a speed up of several orders of magnitude.
+
+As I improved my alignment and scoring methods, I noticed several images were consistently tricky to align: `melon`, `self-portrait`, `church`, and especially `emir`. These images are difficult for reasons such as their complex composition and inconsistent brightness between plates. The order of plate alignment also might have played a role, especially in `emir` which would probably have benefited from aligning to a different plate, such as red, instead of the blue, since there was not much red on the red plate. However, implementing the image pyramid and later bells and whistles successfully minimized artifacts on all of these images.
+
 
 
 
@@ -98,11 +123,6 @@ This example shows the clear improvement in `emir.tif` when aligning based on RG
 |<img width="1000" alt="emir rgb" src="./rgb_base_results/emir_euclidian_rgb_gx 24_gy 49_rx 43_ry 88_ time 10.41.jpg"> Displacement: G (24, 49); R (43, 88) <br /> Runtime: 10.41 seconds | <img width="1000" alt="emir edges" src="./sobel_base_results/emir_euclidian_sobel_gx 23_gy 49_rx 40_ry 107_ time 11.36.jpg"> Displacement: G (23, 49); R (40, 107) <br /> Runtime: 11.36 seconds|
 
 
-## Better Scoring
-
-
-
-
 ## Just For Fun
 I was curious about what other photos the Library of Congress had in their collection (and if my code would work on these images) so I downloaded 15 more images from the catalog that caught my eye, and that seemed hard to align. In my comparisons using this set of images, I found my above findings held on this new set of images.
 
@@ -112,7 +132,7 @@ For example, using edges as a feature significantly improved alignment on tricky
 |:-------------------------:|:-------------------------:|
 |<img width="1000" alt="yurt rgb" src="./exrgb_results/yurt_euclidian_rgb_gx 38_gy 48_rx -9_ry 115_ time 10.57.jpg"> Displacement: G (38, 48); R (-9, 115) <br /> Runtime: 10.57 seconds | <img width="1000" alt="yurt edges" src="./exedge_results/yurt_euclidian_sobel_gx 37_gy 53_rx 56_ry 107_ time 12.5.jpg"> Displacement: G (37, 57); R (56, 107) <br /> Runtime: 12.5 seconds|
 
-A randomly selected sample of edge-aligned results are found in the following table:
+Edge-aligned results are found in the following table:
 
 <table>
   <thead>
@@ -151,4 +171,8 @@ A randomly selected sample of edge-aligned results are found in the following ta
     </tr>
   </tbody>
 </table>
+
+
+## Better Scoring
+
 
