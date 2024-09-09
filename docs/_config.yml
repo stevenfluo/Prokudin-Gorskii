@@ -21,8 +21,8 @@
 title: "Images of the Russian Empire: Colorizing the Prokudin-Gorskii Photo Collection"
 email: sfluo@berkeley.edu
 description: CS 180 Project 1, Steven Luo
-# baseurl: "" # the subpath of your site, e.g. /blog
-url: "" # the base hostname & protocol for your site, e.g. http://example.com
+baseurl: "/Prokudin-Gorskii" # the subpath of your site, e.g. /blog
+url: "https://stevenfluo.github.io" # the base hostname & protocol for your site, e.g. http://example.com
 # twitter_username: jekyllrb
 # github_username:  jekyll
 
@@ -31,6 +31,7 @@ url: "" # the base hostname & protocol for your site, e.g. http://example.com
 theme: jekyll-theme-minimal
 plugins:
 - jekyll-feed
+- jekyll-include-cache
 # - jekyll-remote-theme # add this line to the plugins list if you already have one
 
 
