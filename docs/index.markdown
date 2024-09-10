@@ -7,6 +7,8 @@ title: Home
 permalink: /
 ---
 
+#  CS 180: Project 1, Steven Luo
+
 # Overview
 [Sergei Mikhailovich Prokudin-Gorskii](https://en.wikipedia.org/wiki/Sergey_Prokudin-Gorsky) was a Russian chemist and photographer known for his pioneering work in color photography and his efforts to document early 20th-century Russia. He recorded three exposures of each scene onto a glass plate using a red, green, and blue filter, and envisioned special projectors would be able to combine the exposure and display a color image. Though he left Russia in 1918, these glass plate were purchased by the Library of Congress and [recently digitized](https://www.loc.gov/collections/prokudin-gorskii/about-this-collection/). 
 
@@ -39,10 +41,9 @@ In order to speed up the alignment process, I implemented an image pyramid that 
 
 As I improved my alignment and scoring methods, I noticed several images were consistently tricky to align: `melon`, `self-portrait`, `church`, and especially `emir`. These images are difficult for reasons such as their complex composition and inconsistent brightness between plates. The order of plate alignment also might have played a role, especially in `emir` which would probably have benefited from aligning to a different plate, such as red, instead of the blue, since there was not much red on the red plate. However, implementing the image pyramid and later bells and whistles successfully minimized artifacts on all of these images.
 
-
-
-
 # Results
+
+Displacement: G (x_g, y_g); R (x_r, y_r) indicates an x_g shift on the x-axis and y_g shift on the y-axis on the green plate; x_r shift on the x-axis and y_r shift on the y-axis on the red plate.
 
 <table>
   <thead>
@@ -116,12 +117,45 @@ As I improved my alignment and scoring methods, I noticed several images were co
 
 Introduction and Why does it work?
 
+Here's what we get when we apply a Sobel filter to each plate of `onion_church.tif`. We can see that aligning the edges will obviously result in a precisely aligned image.
+
+<p align="center">
+    <img src="./r_onion.jpg" alt="r onion" width="200"/>
+    <img src="./g_onion.jpg" alt="b onion" width="200"/>
+    <img src="./b_onion.jpg" alt="g onion" width="200"/>
+    <p style="text-align: center;"><i>Edges of each glass plate found with a Sobel filter.</i></p>
+</p>
+
 This example shows the clear improvement in `emir.tif` when aligning based on RGB similarity to aligning based on edges:
+
+<p align="center">
+    <img src="./r_emir.jpg" alt="r emir" width="200"/>
+    <img src="./g_emir.jpg" alt="b emir" width="200"/>
+    <img src="./b_emir.jpg" alt="g emir" width="200"/>
+    <p style="text-align: center;"><i>Edges of each glass plate found with a Sobel filter.</i></p>
+</p>
 
 | RGB | Edge | 
 |:-------------------------:|:-------------------------:|
 |<img width="1000" alt="emir rgb" src="./rgb_base_results/emir_euclidian_rgb_gx 24_gy 49_rx 43_ry 88_ time 10.41.jpg"> Displacement: G (24, 49); R (43, 88) <br /> Runtime: 10.41 seconds | <img width="1000" alt="emir edges" src="./sobel_base_results/emir_euclidian_sobel_gx 23_gy 49_rx 40_ry 107_ time 11.36.jpg"> Displacement: G (23, 49); R (40, 107) <br /> Runtime: 11.36 seconds|
 
+Aligning via edges works great when the object is "busy" with edges in all directions to align, but performance is not as strong on images that are "flat", with fewer edges mostly going in the same direction. Intuitively, alignment is harder with less reference points. Notice how in the following images, after cropping to the center 90% we really only have one horizontal edge to align the three images with. This helps with alignment along the y-axis, but doesn't give us much to work with on the x-axis (you may need to zoom in to see the lines).
+
+<br/>
+<p align="center">
+    <img src="./r_sunset.jpg" alt="r sunset" width="200"/>
+    <img src="./g_sunset.jpg" alt="b sunset" width="200"/>
+    <img src="./b_sunset.jpg" alt="g sunset" width="200"/>
+    <p style="text-align: center;"><i>Edges of each glass plate found with a Sobel filter.</i></p>
+</p>
+
+<br/>
+<p align="center">
+    <img width="500" alt="sunset" src="./exedge_results/sunset_euclidian_sobel_gx 2_gy 52_rx -35_ry 119_ time 11.28.jpg">
+</p>
+
+
+On the final image, look at the sun on the horizon and notice how the red plate is slightly misaligned along the x-axis.
 
 ## Just For Fun
 I was curious about what other photos the Library of Congress had in their collection (and if my code would work on these images) so I downloaded 15 more images from the catalog that caught my eye, and that seemed hard to align. In my comparisons using this set of images, I found my above findings held on this new set of images.
@@ -171,8 +205,5 @@ Edge-aligned results are found in the following table:
     </tr>
   </tbody>
 </table>
-
-
-## Better Scoring
 
 
